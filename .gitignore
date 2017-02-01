@@ -1,0 +1,16 @@
+font_files/*
+*.png
+.DS_Store
+*/.DS_Store
+*/.DS_Store
+__pycache__/*
+*/__pycache__/
+temp/*
+result/*
+data
+*.swp
+nohup.out
+*.npz
+*.csv
+*.tsv
+bvlc_alexnet.caffemodel
