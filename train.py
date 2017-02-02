@@ -184,19 +184,29 @@ def download_model(path, model_name):
         raise RuntimeError('Invalid model type. Choose from '
                            'alexnet, caffenet, googlenet and resnet.')
 
-    if os.path.isfile(name)
-    print('Downloading model file...')
-    six.moves.urllib.request.urlretrieve(url, name)
-    if model_name == 'resnet':
-        with zipfile.ZipFile(name, 'r') as zf:
-            zf.extractall('.')
-    print('Done.')
-    return name
+    if os.path.isfile(path + '/' + name):
+        print('passed!')
+        pass
+    else:
+        print('Downloading model file...')
+        six.moves.urllib.request.urlretrieve(url, path + '/' + name)
+        print('Download completed')
+        if model_name == 'resnet':
+            print('extracting file..')
+            with zipfile.ZipFile(path + '/' + name, 'r') as zf:
+                zf.extractall('.')
+        print('Done.')
+    return path + '/' + name
 
 def copy_model(src, dst):
     assert isinstance(src, link.Chain)
     assert isinstance(dst, link.Chain)
+    print('--------')
+    print(src)
+    print(dst)
     for child in src.children():
+        print('==============')
+        print(child.name)
         if child.name not in dst.__dict__: continue
         dst_child = dst[child.name]
         if type(child) != type(dst_child): continue
@@ -205,10 +215,18 @@ def copy_model(src, dst):
         if isinstance(child, link.Link):
             match = True
             for a, b in zip(child.namedparams(), dst_child.namedparams()):
+                print('a=' + str(a))
+                print('b=' + str(b))
+                print(a[0])
+                print(b[0])
+                print(a[1].data.shape)
+                print(b[1].data.shape)
                 if a[0] != b[0]:
+                    print("unmatch1")
                     match = False
                     break
                 if a[1].data.shape != b[1].data.shape:
+                    print("unmatch2")
                     match = False
                     break
             if not match:
@@ -239,13 +257,18 @@ def predict(test_data, classifier, batchsize = 5, gpu = True):
 
     return predictions
 
-model_path = download_model('alexnet')  # モデルパラメータのダウンロード
+alex = Alex()
+
+model_path = download_model('data', 'alexnet')  # モデルパラメータのダウンロード
 print(model_path)
 func = caffe.CaffeFunction(model_path)
-alex = Alex()
+
 copy_model(func, alex)                  # モデルパラメータのコピー
 #alex.to_gpu()                           # gpuを使う場合
+
 classifier = Classifier(alex)
+print('exit!')
+exit()
 optimizer = optimizers.MomentumSGD(lr=0.0005)  # パラメータの学習方法は慣性項付きの確率的勾配法で, 学習率は0.0005に設定.
 optimizer.setup(classifier)
 optimizer.add_hook(chainer.optimizer.WeightDecay(0.0001))  # l2正則化
