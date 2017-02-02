@@ -9,6 +9,7 @@ import zipfile
 from chainer.links import caffe
 from chainer import link, Chain, optimizers, Variable
 from PIL import Image
+from net.nets import *
 
 
 class ImageData():
@@ -178,8 +179,9 @@ def download_model(path, model_name):
         url = 'http://dl.caffe.berkeleyvision.org/bvlc_googlenet.caffemodel'
         name = 'bvlc_googlenet.caffemodel'
     elif model_name == 'resnet':
-        url = 'http://research.microsoft.com/en-us/um/people/kahe/resnet/models.zip'
-        name = 'models.zip'
+        #url = 'http://research.microsoft.com/en-us/um/people/kahe/resnet/models.zip'
+        url = 'https://s3-ap-northeast-1.amazonaws.com/alexandermodeldata/ResNet-152-model.caffemodel'
+        name = 'ResNet-152-model.caffemodel'
     else:
         raise RuntimeError('Invalid model type. Choose from '
                            'alexnet, caffenet, googlenet and resnet.')
@@ -191,10 +193,10 @@ def download_model(path, model_name):
         print('Downloading model file...')
         six.moves.urllib.request.urlretrieve(url, path + '/' + name)
         print('Download completed')
-        if model_name == 'resnet':
-            print('extracting file..')
-            with zipfile.ZipFile(path + '/' + name, 'r') as zf:
-                zf.extractall('.')
+        #if model_name == 'resnet':
+        #    print('extracting file..')
+        #    with zipfile.ZipFile(path + '/' + name, 'r') as zf:
+        #        zf.extractall('.')
         print('Done.')
     return path + '/' + name
 
@@ -208,8 +210,10 @@ def copy_model(src, dst):
         print('==============')
         print(child.name)
         if child.name not in dst.__dict__: continue
+        print('came 1')
         dst_child = dst[child.name]
         if type(child) != type(dst_child): continue
+        print('came 2')
         if isinstance(child, link.Chain):
             copy_model(child, dst_child)
         if isinstance(child, link.Link):
@@ -258,13 +262,17 @@ def predict(test_data, classifier, batchsize = 5, gpu = True):
     return predictions
 
 alex = Alex()
+model = ResNet152Layers()
 
-model_path = download_model('data', 'alexnet')  # モデルパラメータのダウンロード
+#model_path = download_model('data', 'alexnet')  # モデルパラメータのダウンロード
+model_path = download_model('data', 'resnet')  # モデルパラメータのダウンロード
 print(model_path)
 func = caffe.CaffeFunction(model_path)
 
-copy_model(func, alex)                  # モデルパラメータのコピー
+#copy_model(func, alex)                  # モデルパラメータのコピー
+copy_model(func, model)                  # モデルパラメータのコピー
 #alex.to_gpu()                           # gpuを使う場合
+exit()
 
 classifier = Classifier(alex)
 print('exit!')
